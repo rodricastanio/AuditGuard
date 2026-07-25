@@ -100,6 +100,10 @@ export function generateMarkdownReport(findings, meta = {}) {
     md += '## Summary\n\n';
     md += generateSummaryTable(findings);
     md += '\n';
+    if (summary.total === 0) {
+        md += '> [!NOTE]\n';
+        md += '> No security vulnerabilities detected. All clear!\n\n';
+    }
     if (summary.bySeverity.critical > 0) {
         md += '> [!CAUTION]\n';
         md += `> **${summary.bySeverity.critical} CRITICAL finding(s) detected.** CI will fail until resolved.\n\n`;
