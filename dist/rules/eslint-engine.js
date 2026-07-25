@@ -1,4 +1,9 @@
 import { ESLint } from 'eslint';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { createRequire } from 'node:module';
+import { pathToFileURL } from 'node:url';
 const SECURITY_RULES = {
     'security/detect-eval-with-expression': 'critical',
     'security/detect-child-process': 'high',
@@ -8,7 +13,7 @@ const SECURITY_RULES = {
     'security/detect-possible-timing-attacks': 'medium',
     'security/detect-non-literal-require': 'high',
     'security/detect-object-injection': 'medium',
-    'security/detect-pseudo-random-bytes': 'medium',
+    'security/detect-pseudoRandomBytes': 'medium',
     'security/detect-new-buffer': 'high',
     'security/detect-buffer-noassert': 'medium',
     'security/detect-bidi-characters': 'high',
@@ -59,7 +64,7 @@ const RULE_EXPLANATIONS = {
         suggestion: 'Use Object.create(null) for dictionaries, or validate keys against an allowlist.',
         cwe: 'CWE-1321',
     },
-    'security/detect-pseudo-random-bytes': {
+    'security/detect-pseudoRandomBytes': {
         explanation: 'pseudoRandomBytes() is not cryptographically secure. It should not be used for security-sensitive operations.',
         suggestion: 'Use crypto.randomBytes() or crypto.randomUUID() for cryptographic randomness.',
         cwe: 'CWE-330',
@@ -113,73 +118,85 @@ function getCweUrl(cwe) {
     return undefined;
 }
 export async function runEslintEngine(scanPath) {
-    const [securityPlugin, noSecretsPlugin] = await Promise.all([
-        import('eslint-plugin-security'),
-        import('eslint-plugin-no-secrets'),
-    ]);
-    const overrideConfig = {
-        plugins: {
-            security: securityPlugin.default || securityPlugin,
-            'no-secrets': noSecretsPlugin.default || noSecretsPlugin,
-        },
-        rules: {
-            'security/detect-eval-with-expression': 'error',
-            'security/detect-child-process': 'error',
-            'security/detect-non-literal-fs-filename': 'warn',
-            'security/detect-non-literal-regexp': 'warn',
-            'security/detect-unsafe-regex': 'error',
-            'security/detect-possible-timing-attacks': 'warn',
-            'security/detect-non-literal-require': 'error',
-            'security/detect-object-injection': 'warn',
-            'security/detect-pseudo-random-bytes': 'warn',
-            'security/detect-new-buffer': 'error',
-            'security/detect-buffer-noassert': 'warn',
-            'security/detect-bidi-characters': 'error',
-            'no-secrets/no-secrets': ['error', { tolerance: 4.0 }],
-            'no-eval': 'error',
-            'no-implied-eval': 'error',
-            'no-new-func': 'error',
-            'no-script-url': 'error',
-        },
-    };
-    const eslint = new ESLint({
-        overrideConfig: overrideConfig,
-        overrideConfigFile: null,
-    });
-    const results = await eslint.lintFiles([scanPath]);
-    const findings = [];
-    for (const result of results) {
-        for (const message of result.messages) {
-            if (!message.ruleId)
-                continue;
-            const severity = SECURITY_RULES[message.ruleId];
-            if (!severity)
-                continue;
-            const meta = RULE_EXPLANATIONS[message.ruleId] || {
-                explanation: message.message,
-                suggestion: 'Review the flagged code and apply security best practices.',
-                cwe: '',
-            };
-            findings.push({
-                id: `eslint-${message.ruleId}-${result.filePath}:${message.line}`,
-                engine: 'eslint',
-                rule: message.ruleId,
-                severity,
-                file: result.filePath,
-                line: message.line,
-                column: message.column,
-                endLine: message.endLine,
-                endColumn: message.endColumn,
-                message: message.message,
-                explanation: meta.explanation,
-                suggestion: meta.suggestion,
-                cwe: meta.cwe,
-                cweUrl: getCweUrl(meta.cwe),
-                fixAvailable: false,
-                autoFixEligible: false,
-            });
-        }
+    const require = createRequire(import.meta.url);
+    const securityPluginPath = pathToFileURL(require.resolve('eslint-plugin-security')).href;
+    const noSecretsPluginPath = pathToFileURL(require.resolve('eslint-plugin-no-secrets')).href;
+    const configContent = `
+import security from '${securityPluginPath}';
+import noSecrets from '${noSecretsPluginPath}';
+export default [
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.mjs', '**/*.cjs'],
+    plugins: { security, 'no-secrets': noSecrets },
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      parserOptions: { ecmaFeatures: { jsx: true } }
+    },
+    rules: {
+      'security/detect-eval-with-expression': 'error',
+      'security/detect-child-process': 'error',
+      'security/detect-non-literal-fs-filename': 'warn',
+      'security/detect-non-literal-regexp': 'warn',
+      'security/detect-unsafe-regex': 'error',
+      'security/detect-possible-timing-attacks': 'warn',
+      'security/detect-non-literal-require': 'error',
+      'security/detect-object-injection': 'warn',
+      'security/detect-pseudoRandomBytes': 'warn',
+      'security/detect-new-buffer': 'error',
+      'security/detect-buffer-noassert': 'warn',
+      'security/detect-bidi-characters': 'error',
+      'no-secrets/no-secrets': ['error', { tolerance: 4.0 }],
+      'no-eval': 'error',
+      'no-implied-eval': 'error',
+      'no-new-func': 'error',
+      'no-script-url': 'error'
     }
-    return findings;
+  }
+];
+`;
+    const configPath = path.join(os.tmpdir(), `auditguard-eslint-${Date.now()}.config.mjs`);
+    fs.writeFileSync(configPath, configContent, 'utf8');
+    try {
+        const eslint = new ESLint({ overrideConfigFile: configPath });
+        const results = await eslint.lintFiles([scanPath]);
+        const findings = [];
+        for (const result of results) {
+            for (const message of result.messages) {
+                if (!message.ruleId)
+                    continue;
+                const severity = SECURITY_RULES[message.ruleId];
+                if (!severity)
+                    continue;
+                const meta = RULE_EXPLANATIONS[message.ruleId] || {
+                    explanation: message.message,
+                    suggestion: 'Review the flagged code and apply security best practices.',
+                    cwe: '',
+                };
+                findings.push({
+                    id: `eslint-${message.ruleId}-${result.filePath}:${message.line}`,
+                    engine: 'eslint',
+                    rule: message.ruleId,
+                    severity,
+                    file: result.filePath,
+                    line: message.line,
+                    column: message.column,
+                    endLine: message.endLine,
+                    endColumn: message.endColumn,
+                    message: message.message,
+                    explanation: meta.explanation,
+                    suggestion: meta.suggestion,
+                    cwe: meta.cwe,
+                    cweUrl: getCweUrl(meta.cwe),
+                    fixAvailable: false,
+                    autoFixEligible: false,
+                });
+            }
+        }
+        return findings;
+    }
+    finally {
+        fs.unlinkSync(configPath);
+    }
 }
 //# sourceMappingURL=eslint-engine.js.map

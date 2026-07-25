@@ -86,7 +86,7 @@ export async function runSemgrepEngine(
   const stdout = await new Promise<string>((resolve, reject) => {
     execFile(
       'semgrep',
-      ['scan', ...configs, '--json', '--error=false', '--jobs', '4', '--quiet', scanPath],
+      ['scan', ...configs, '--json', '--jobs', '4', '--quiet', scanPath],
       {
         timeout: 120_000,
         maxBuffer: 50 * 1024 * 1024,

@@ -53,7 +53,7 @@ export async function runSemgrepEngine(scanPath, rulesets) {
     const configs = (rulesets || ['p/default', 'p/security-audit', 'p/owasp-top-ten'])
         .flatMap((r) => ['--config', r]);
     const stdout = await new Promise((resolve, reject) => {
-        execFile('semgrep', ['scan', ...configs, '--json', '--error=false', '--jobs', '4', '--quiet', scanPath], {
+        execFile('semgrep', ['scan', ...configs, '--json', '--jobs', '4', '--quiet', scanPath], {
             timeout: 120_000,
             maxBuffer: 50 * 1024 * 1024,
             env: { ...process.env, SEMGREP_SEND_METRICS: 'off' },
