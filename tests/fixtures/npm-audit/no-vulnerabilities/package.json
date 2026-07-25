@@ -1,0 +1,8 @@
+{
+  "name": "auditguard-test-safe",
+  "version": "1.0.0",
+  "dependencies": {
+    "minimist": "1.2.8",
+    "lodash": "4.17.21"
+  }
+}
