@@ -1,7 +1,7 @@
-import type { Finding, Severity } from './types/finding.js';
+import type { Finding, Severity, AuditResult } from './types/finding.js';
 import type { AuditGuardConfig } from './types/config.js';
-export declare function runAudit(config: AuditGuardConfig): Promise<Finding[]>;
-export declare function generateReport(findings: Finding[], meta: {
+export declare function runAudit(config: AuditGuardConfig): Promise<AuditResult>;
+export declare function generateReport(result: AuditResult, meta: {
     repo?: string;
     branch?: string;
     commit?: string;

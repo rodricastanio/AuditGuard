@@ -112,7 +112,7 @@ function getCweUrl(cwe) {
     }
     return undefined;
 }
-export async function runEslintEngine(scanPath, configPath) {
+export async function runEslintEngine(scanPath) {
     const [securityPlugin, noSecretsPlugin] = await Promise.all([
         import('eslint-plugin-security'),
         import('eslint-plugin-no-secrets'),
@@ -144,7 +144,7 @@ export async function runEslintEngine(scanPath, configPath) {
     };
     const eslint = new ESLint({
         overrideConfig: overrideConfig,
-        overrideConfigFile: configPath,
+        overrideConfigFile: null,
     });
     const results = await eslint.lintFiles([scanPath]);
     const findings = [];

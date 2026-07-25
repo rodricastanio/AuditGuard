@@ -153,7 +153,6 @@ function getCweUrl(cwe: string): string | undefined {
 
 export async function runEslintEngine(
   scanPath: string,
-  configPath?: string,
 ): Promise<Finding[]> {
   const [securityPlugin, noSecretsPlugin] = await Promise.all([
     import('eslint-plugin-security'),
@@ -188,7 +187,7 @@ export async function runEslintEngine(
 
   const eslint = new ESLint({
     overrideConfig: overrideConfig as ESLint.Options['overrideConfig'],
-    overrideConfigFile: configPath,
+    overrideConfigFile: null,
   });
 
   const results = await eslint.lintFiles([scanPath]);

@@ -1,7 +1,5 @@
 import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 import { SEMGREP_VERSION } from '../types/config.js';
-const execFileAsync = promisify(execFile);
 const SEMGREP_SEVERITY_MAP = {
     ERROR: 'high',
     WARNING: 'medium',
@@ -54,57 +52,50 @@ function getCweUrl(cwe) {
 export async function runSemgrepEngine(scanPath, rulesets) {
     const configs = (rulesets || ['p/default', 'p/security-audit', 'p/owasp-top-ten'])
         .flatMap((r) => ['--config', r]);
-    try {
-        const { stdout } = await execFileAsync('semgrep', [
-            'scan',
-            ...configs,
-            '--json',
-            '--error=false',
-            '--jobs', '4',
-            '--quiet',
-            scanPath,
-        ], {
+    const stdout = await new Promise((resolve, reject) => {
+        execFile('semgrep', ['scan', ...configs, '--json', '--error=false', '--jobs', '4', '--quiet', scanPath], {
             timeout: 120_000,
             maxBuffer: 50 * 1024 * 1024,
-            env: {
-                ...process.env,
-                SEMGREP_SEND_METRICS: 'off',
-            },
+            env: { ...process.env, SEMGREP_SEND_METRICS: 'off' },
+        }, (error, stdout, stderr) => {
+            if (stdout) {
+                resolve(stdout);
+            }
+            else {
+                const detail = stderr ? `: ${stderr.trim()}` : '';
+                reject(new Error(`Semgrep scan failed (v${SEMGREP_VERSION})${detail}${error ? ` — ${error.message}` : ''}`));
+            }
         });
-        const parsed = JSON.parse(stdout);
-        const findings = [];
-        for (const result of parsed.results) {
-            const ruleId = result.check_id;
-            const severity = SEMGREP_SEVERITY_MAP[result.extra.severity.toUpperCase()] || 'medium';
-            const meta = PATTERN_EXPLANATIONS[ruleId] || {
-                explanation: result.extra.message,
-                suggestion: 'Review the flagged code and apply security best practices.',
-                cwe: result.extra.metadata.cwe?.[0] || inferCweFromRuleId(ruleId),
-            };
-            findings.push({
-                id: `semgrep-${ruleId}-${result.path}:${result.start.line}`,
-                engine: 'semgrep',
-                rule: ruleId,
-                severity,
-                file: result.path,
-                line: result.start.line,
-                column: result.start.col,
-                endLine: result.end.line,
-                endColumn: result.end.col,
-                message: result.extra.message,
-                explanation: meta.explanation,
-                suggestion: meta.suggestion,
-                cwe: meta.cwe,
-                cweUrl: getCweUrl(meta.cwe),
-                fixAvailable: false,
-                autoFixEligible: false,
-            });
-        }
-        return findings;
+    });
+    const parsed = JSON.parse(stdout);
+    const findings = [];
+    for (const result of parsed.results) {
+        const ruleId = result.check_id;
+        const severity = SEMGREP_SEVERITY_MAP[result.extra.severity.toUpperCase()] || 'medium';
+        const meta = PATTERN_EXPLANATIONS[ruleId] || {
+            explanation: result.extra.message,
+            suggestion: 'Review the flagged code and apply security best practices.',
+            cwe: result.extra.metadata.cwe?.[0] || inferCweFromRuleId(ruleId),
+        };
+        findings.push({
+            id: `semgrep-${ruleId}-${result.path}:${result.start.line}`,
+            engine: 'semgrep',
+            rule: ruleId,
+            severity,
+            file: result.path,
+            line: result.start.line,
+            column: result.start.col,
+            endLine: result.end.line,
+            endColumn: result.end.col,
+            message: result.extra.message,
+            explanation: meta.explanation,
+            suggestion: meta.suggestion,
+            cwe: meta.cwe,
+            cweUrl: getCweUrl(meta.cwe),
+            fixAvailable: false,
+            autoFixEligible: false,
+        });
     }
-    catch (error) {
-        const msg = error instanceof Error ? error.message : String(error);
-        throw new Error(`Semgrep scan failed (v${SEMGREP_VERSION}): ${msg}`);
-    }
+    return findings;
 }
 //# sourceMappingURL=semgrep-engine.js.map

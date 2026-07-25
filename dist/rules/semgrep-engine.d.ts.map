@@ -1,1 +1,1 @@
-{"version":3,"file":"semgrep-engine.d.ts","sourceRoot":"","sources":["../../src/rules/semgrep-engine.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,OAAO,EAAY,MAAM,qBAAqB,CAAC;AA+E7D,wBAAsB,gBAAgB,CACpC,QAAQ,EAAE,MAAM,EAChB,QAAQ,CAAC,EAAE,MAAM,EAAE,GAClB,OAAO,CAAC,OAAO,EAAE,CAAC,CA6DpB"}
+{"version":3,"file":"semgrep-engine.d.ts","sourceRoot":"","sources":["../../src/rules/semgrep-engine.ts"],"names":[],"mappings":"AACA,OAAO,KAAK,EAAE,OAAO,EAAY,MAAM,qBAAqB,CAAC;AA6E7D,wBAAsB,gBAAgB,CACpC,QAAQ,EAAE,MAAM,EAChB,QAAQ,CAAC,EAAE,MAAM,EAAE,GAClB,OAAO,CAAC,OAAO,EAAE,CAAC,CA+DpB"}

@@ -28,3 +28,13 @@ export interface FindingSummary {
   byEngine: Record<Engine, number>;
   byFile: Record<string, number>;
 }
+
+export interface EngineFailure {
+  engine: string;
+  error: string;
+}
+
+export interface AuditResult {
+  findings: Finding[];
+  engineFailures: EngineFailure[];
+}

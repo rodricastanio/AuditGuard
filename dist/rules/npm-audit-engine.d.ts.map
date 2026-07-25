@@ -1,1 +1,1 @@
-{"version":3,"file":"npm-audit-engine.d.ts","sourceRoot":"","sources":["../../src/rules/npm-audit-engine.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,OAAO,EAAY,MAAM,qBAAqB,CAAC;AA2C7D,wBAAsB,iBAAiB,CAAC,QAAQ,EAAE,MAAM,GAAG,OAAO,CAAC,OAAO,EAAE,CAAC,CAkF5E"}
+{"version":3,"file":"npm-audit-engine.d.ts","sourceRoot":"","sources":["../../src/rules/npm-audit-engine.ts"],"names":[],"mappings":"AACA,OAAO,KAAK,EAAE,OAAO,EAAY,MAAM,qBAAqB,CAAC;AAkE7D,wBAAsB,iBAAiB,CAAC,QAAQ,EAAE,MAAM,GAAG,OAAO,CAAC,OAAO,EAAE,CAAC,CAqE5E"}

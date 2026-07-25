@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import type { Finding, Severity } from './types/finding.js';
+import type { Finding, Severity, EngineFailure, AuditResult } from './types/finding.js';
 import type { AuditGuardConfig } from './types/config.js';
 import { runEslintEngine } from './rules/eslint-engine.js';
 import { runSemgrepEngine } from './rules/semgrep-engine.js';
@@ -18,19 +18,19 @@ function shouldFail(findings: Finding[], failOnLevel: Severity | 'never'): boole
   );
 }
 
-export async function runAudit(config: AuditGuardConfig): Promise<Finding[]> {
+export async function runAudit(config: AuditGuardConfig): Promise<AuditResult> {
   const allFindings: Finding[] = [];
+  const engineFailures: EngineFailure[] = [];
 
   core.info('Starting ESLint security scan...');
   try {
-    const eslintFindings = await runEslintEngine(
-      config.scanPath,
-      config.eslintConfigPath,
-    );
+    const eslintFindings = await runEslintEngine(config.scanPath);
     core.info(`ESLint: ${eslintFindings.length} findings`);
     allFindings.push(...eslintFindings);
   } catch (error) {
-    core.warning(`ESLint scan failed: ${error}`);
+    const msg = error instanceof Error ? error.message : String(error);
+    core.warning(`ESLint scan failed: ${msg}`);
+    engineFailures.push({ engine: 'eslint', error: msg });
   }
 
   core.info('Starting Semgrep scan...');
@@ -42,7 +42,9 @@ export async function runAudit(config: AuditGuardConfig): Promise<Finding[]> {
     core.info(`Semgrep: ${semgrepFindings.length} findings`);
     allFindings.push(...semgrepFindings);
   } catch (error) {
-    core.warning(`Semgrep scan failed: ${error}`);
+    const msg = error instanceof Error ? error.message : String(error);
+    core.warning(`Semgrep scan failed: ${msg}`);
+    engineFailures.push({ engine: 'semgrep', error: msg });
   }
 
   core.info('Starting npm audit...');
@@ -51,20 +53,25 @@ export async function runAudit(config: AuditGuardConfig): Promise<Finding[]> {
     core.info(`npm audit: ${npmFindings.length} findings`);
     allFindings.push(...npmFindings);
   } catch (error) {
-    core.warning(`npm audit failed: ${error}`);
+    const msg = error instanceof Error ? error.message : String(error);
+    core.warning(`npm audit failed: ${msg}`);
+    engineFailures.push({ engine: 'npm-audit', error: msg });
   }
 
   const deduplicated = deduplicateFindings(allFindings);
   core.info(`After deduplication: ${deduplicated.length} findings`);
+  if (engineFailures.length > 0) {
+    core.warning(`${engineFailures.length} engine(s) failed: ${engineFailures.map((f) => f.engine).join(', ')}`);
+  }
 
-  return deduplicated;
+  return { findings: deduplicated, engineFailures };
 }
 
 export function generateReport(
-  findings: Finding[],
+  result: AuditResult,
   meta: { repo?: string; branch?: string; commit?: string; scanPath?: string },
 ): string {
-  return generateMarkdownReport(findings, meta);
+  return generateMarkdownReport(result.findings, meta, result.engineFailures);
 }
 
 export function evaluateExitCode(
@@ -118,24 +125,24 @@ async function main(): Promise<void> {
     core.info(`Dry run: ${config.dryRun}`);
 
     core.info('--- Running security engines ---');
-    const findings = await runAudit(config);
-    core.info(`=== Scan complete: ${findings.length} findings total ===`);
+    const result = await runAudit(config);
+    core.info(`=== Scan complete: ${result.findings.length} findings total ===`);
 
     core.info('Generating markdown report...');
     const meta = readOutputs();
-    const report = generateMarkdownReport(findings, meta);
+    const report = generateMarkdownReport(result.findings, meta, result.engineFailures);
     core.info(`Report generated (${report.length} chars)`);
 
     core.info('Writing report to GITHUB_STEP_SUMMARY...');
     writeJobSummary(report);
 
     core.info('Setting action outputs...');
-    core.setOutput('total-findings', findings.length.toString());
-    const criticalCount = findings.filter((f) => f.severity === 'critical').length;
+    core.setOutput('total-findings', result.findings.length.toString());
+    const criticalCount = result.findings.filter((f) => f.severity === 'critical').length;
     core.setOutput('critical-count', criticalCount.toString());
 
     core.info('Evaluating exit code...');
-    evaluateExitCode(findings, config.failOnLevel);
+    evaluateExitCode(result.findings, config.failOnLevel);
 
     core.info('=== AuditGuard finished ===');
   } catch (error) {
