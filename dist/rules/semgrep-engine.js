@@ -1,3 +1,4 @@
+import * as core from '@actions/core';
 import { execFile } from 'node:child_process';
 import { SEMGREP_VERSION } from '../types/config.js';
 const SEMGREP_SEVERITY_MAP = {
@@ -68,6 +69,11 @@ export async function runSemgrepEngine(scanPath, rulesets) {
         });
     });
     const parsed = JSON.parse(stdout);
+    if (parsed.errors?.length) {
+        for (const err of parsed.errors) {
+            core.warning(`Semgrep error: [${err.type}] ${err.message}`);
+        }
+    }
     const findings = [];
     for (const result of parsed.results) {
         const ruleId = result.check_id;

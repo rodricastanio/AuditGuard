@@ -26,7 +26,7 @@ export interface FindingSummary {
     byFile: Record<string, number>;
 }
 export interface EngineFailure {
-    engine: string;
+    engine: Engine;
     error: string;
 }
 export interface AuditResult {

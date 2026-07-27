@@ -30,7 +30,7 @@ export interface FindingSummary {
 }
 
 export interface EngineFailure {
-  engine: string;
+  engine: Engine;
   error: string;
 }
 

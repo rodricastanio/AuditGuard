@@ -69,9 +69,11 @@ function parseConfig() {
         .split(',')
         .map((r) => r.trim())
         .filter(Boolean);
+    const failOnLevelRaw = process.env['AUDITGUARD_FAIL_ON_LEVEL'] || 'critical';
+    const failOnLevel = (failOnLevelRaw === 'moderate' ? 'medium' : failOnLevelRaw);
     return {
         scanPath: process.env['AUDITGUARD_SCAN_PATH'] || '.',
-        failOnLevel: (process.env['AUDITGUARD_FAIL_ON_LEVEL'] || 'critical'),
+        failOnLevel,
         semgrepRulesets,
         eslintConfigPath: process.env['AUDITGUARD_ESLINT_CONFIG'] || undefined,
         autoPrEnabled: process.env['AUDITGUARD_AUTO_PR'] === 'true',

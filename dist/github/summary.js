@@ -6,7 +6,7 @@ export function writeJobSummary(report) {
         core.warning('GITHUB_STEP_SUMMARY not set; skipping job summary.');
         return;
     }
-    fs.appendFileSync(summaryFile, report + '\n', 'utf8');
+    fs.writeFileSync(summaryFile, report + '\n', 'utf8');
     core.info('Report written to job summary');
 }
 //# sourceMappingURL=summary.js.map

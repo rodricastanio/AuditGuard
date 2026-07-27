@@ -1,3 +1,4 @@
+import * as core from '@actions/core';
 import { execFile } from 'node:child_process';
 import type { Finding, Severity } from '../types/finding.js';
 import { SEMGREP_VERSION } from '../types/config.js';
@@ -108,6 +109,13 @@ export async function runSemgrepEngine(
   });
 
   const parsed: SemgrepResult = JSON.parse(stdout);
+
+  if (parsed.errors?.length) {
+    for (const err of parsed.errors) {
+      core.warning(`Semgrep error: [${err.type}] ${err.message}`);
+    }
+  }
+
   const findings: Finding[] = [];
 
   for (const result of parsed.results) {

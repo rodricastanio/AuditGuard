@@ -11,7 +11,19 @@ const SEVERITY_EMOJI: Record<Severity, string> = {
 };
 
 function escapeMarkdown(str: string): string {
-  return str.replace(/\|/g, '\\|').replace(/\n/g, ' ');
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/\|/g, '\\|')
+    .replace(/\[/g, '\\[')
+    .replace(/\]/g, '\\]')
+    .replace(/\*/g, '\\*')
+    .replace(/_/g, '\\_')
+    .replace(/~/g, '\\~')
+    .replace(/`/g, '\\`')
+    .replace(/#/g, '\\#')
+    .replace(/</g, '\\<')
+    .replace(/>/g, '\\>')
+    .replace(/\n/g, ' ');
 }
 
 function generateSummary(findings: Finding[]): FindingSummary {

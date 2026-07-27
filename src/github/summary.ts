@@ -8,6 +8,6 @@ export function writeJobSummary(report: string): void {
     return;
   }
 
-  fs.appendFileSync(summaryFile, report + '\n', 'utf8');
+  fs.writeFileSync(summaryFile, report + '\n', 'utf8');
   core.info('Report written to job summary');
 }

@@ -242,6 +242,6 @@ export default [
 
     return findings;
   } finally {
-    fs.unlinkSync(configPath);
+    try { fs.unlinkSync(configPath); } catch { /* ignore cleanup errors */ }
   }
 }
