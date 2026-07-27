@@ -48,6 +48,7 @@
 - `fail-on-level`: Minimum severity to fail CI (default: `critical`)
 - `semgrep-rulesets`: Comma-separated rulesets (default: `p/default,p/security-audit,p/owasp-top-ten`)
 - `eslint-config`: Custom ESLint config path (optional)
+- `report-lang`: Report language `en` or `es` (default: `en`). Only translates template strings; CVE descriptions, rule names, CWE IDs remain in English.
 
 ### FR-09: Monorepo Support
 - Support scanning a subdirectory via `scan-path` input

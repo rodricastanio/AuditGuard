@@ -36,6 +36,14 @@ inputs:
     description: 'Skip PR creation and comment posting'
     required: false
     default: 'false'
+  report-lang:
+    description: 'Report language (en or es)'
+    required: false
+    default: 'en'
+    type: choice
+    options:
+      - en
+      - es
 
 outputs:
   total-findings:
@@ -76,6 +84,7 @@ runs:
         AUDITGUARD_ESLINT_CONFIG: ${{ inputs.eslint-config }}
         AUDITGUARD_AUTO_PR: ${{ inputs.auto-pr }}
         AUDITGUARD_DRY_RUN: ${{ inputs.dry-run }}
+        AUDITGUARD_REPORT_LANG: ${{ inputs.report-lang }}
         GITHUB_TOKEN: ${{ github.token }}
       run: |
         cd "${{ github.workspace }}"

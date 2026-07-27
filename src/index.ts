@@ -5,7 +5,7 @@ import { runEslintEngine } from './rules/eslint-engine.js';
 import { runSemgrepEngine } from './rules/semgrep-engine.js';
 import { runNpmAuditEngine } from './rules/npm-audit-engine.js';
 import { deduplicateFindings } from './rules/deduplicator.js';
-import { generateMarkdownReport } from './report/markdown-generator.js';
+import { generateMarkdownReport, type ReportLang } from './report/markdown-generator.js';
 import { writeJobSummary } from './github/summary.js';
 
 const SEVERITY_EXIT_ORDER: Severity[] = ['critical', 'high', 'medium', 'low', 'info'];
@@ -97,6 +97,9 @@ function parseConfig(): AuditGuardConfig {
     | Severity
     | 'never';
 
+  const reportLangRaw = process.env['AUDITGUARD_REPORT_LANG'] || 'en';
+  const reportLang: ReportLang = reportLangRaw === 'es' ? 'es' : 'en';
+
   return {
     scanPath: process.env['AUDITGUARD_SCAN_PATH'] || '.',
     failOnLevel,
@@ -104,6 +107,7 @@ function parseConfig(): AuditGuardConfig {
     eslintConfigPath: process.env['AUDITGUARD_ESLINT_CONFIG'] || undefined,
     autoPrEnabled: process.env['AUDITGUARD_AUTO_PR'] === 'true',
     dryRun: process.env['AUDITGUARD_DRY_RUN'] === 'true',
+    reportLang,
   };
 }
 
@@ -126,6 +130,7 @@ async function main(): Promise<void> {
     core.info(`ESLint config: ${config.eslintConfigPath || '(default)'}`);
     core.info(`Auto-PR: ${config.autoPrEnabled}`);
     core.info(`Dry run: ${config.dryRun}`);
+    core.info(`Report language: ${config.reportLang}`);
 
     core.info('--- Running security engines ---');
     const result = await runAudit(config);
@@ -133,7 +138,7 @@ async function main(): Promise<void> {
 
     core.info('Generating markdown report...');
     const meta = readOutputs();
-    const report = generateMarkdownReport(result.findings, meta, result.engineFailures);
+    const report = generateMarkdownReport(result.findings, meta, result.engineFailures, config.reportLang);
     core.info(`Report generated (${report.length} chars)`);
 
     core.info('Writing report to GITHUB_STEP_SUMMARY...');

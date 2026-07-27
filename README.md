@@ -53,6 +53,7 @@ jobs:
 | `fail-on-level` | Minimum severity to fail CI (`never`, `low`, `moderate`, `high`, `critical`) | `critical` |
 | `semgrep-rulesets` | Comma-separated Semgrep rulesets | `p/default,p/security-audit,p/owasp-top-ten` |
 | `eslint-config` | Custom ESLint config path | (built-in security config) |
+| `report-lang` | Report language (`en` or `es`) | `en` |
 
 ## Outputs
 

@@ -96,4 +96,18 @@ describe('generateMarkdownReport', () => {
     expect(report).toContain('[!CAUTION]');
     expect(report).toContain('1 CRITICAL finding');
   });
+
+  it('generates Spanish report when lang=es', () => {
+    const findings = [makeFinding({ severity: 'critical' })];
+    const report = generateMarkdownReport(findings, {}, [], 'es');
+    expect(report).toContain('# AuditGuard Informe de Seguridad');
+    expect(report).toContain('## Resumen');
+    expect(report).toContain('## Hallazgos Críticos');
+    expect(report).toContain('**Explicación:**');
+    expect(report).toContain('**Sugerencia:**');
+    expect(report).toContain('**Severidad**');
+    expect(report).toContain('**Archivo**');
+    expect(report).toContain('**Regla**');
+    expect(report).toContain('hallazgo(s) CRÍTICO(s) detectado(s)');
+  });
 });

@@ -4,6 +4,7 @@ export const DEFAULT_CONFIG = {
     semgrepRulesets: ['p/default', 'p/security-audit', 'p/owasp-top-ten'],
     autoPrEnabled: true,
     dryRun: false,
+    reportLang: 'en',
 };
 export const SEMGREP_VERSION = '1.170.1';
 //# sourceMappingURL=config.js.map
