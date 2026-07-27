@@ -110,4 +110,18 @@ describe('generateMarkdownReport', () => {
     expect(report).toContain('**Regla**');
     expect(report).toContain('hallazgo(s) CRÍTICO(s) detectado(s)');
   });
+
+  it('generates Spanish meta labels', () => {
+    const report = generateMarkdownReport([], {
+      repo: 'org/repo',
+      branch: 'main',
+      commit: 'abc1234',
+      scanPath: 'src/',
+    }, [], 'es');
+    expect(report).toContain('**Repositorio:** org/repo');
+    expect(report).toContain('**Rama:** main');
+    expect(report).toContain('**Commit:** abc1234');
+    expect(report).toContain('**Ruta escaneada:** `src/`');
+    expect(report).toContain('**Fecha:**');
+  });
 });
