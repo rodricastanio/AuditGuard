@@ -124,4 +124,22 @@ describe('generateMarkdownReport', () => {
     expect(report).toContain('**Ruta escaneada:** `src/`');
     expect(report).toContain('**Fecha:**');
   });
+
+  it('uses translated severity labels when lang=es', () => {
+    const findings = [
+      makeFinding({ severity: 'critical', id: 'es-crit' }),
+      makeFinding({ severity: 'high', id: 'es-high' }),
+      makeFinding({ severity: 'medium', id: 'es-med' }),
+      makeFinding({ severity: 'low', id: 'es-low' }),
+    ];
+    const report = generateMarkdownReport(findings, {}, [], 'es');
+    expect(report).not.toContain('CRITICAL');
+    expect(report).not.toContain('HIGH');
+    expect(report).not.toContain('MEDIUM');
+    expect(report).not.toContain('LOW');
+    expect(report).toContain('CRÍTICA');
+    expect(report).toContain('ALTA');
+    expect(report).toContain('MEDIA');
+    expect(report).toContain('BAJA');
+  });
 });

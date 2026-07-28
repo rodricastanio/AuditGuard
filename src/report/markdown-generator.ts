@@ -53,6 +53,8 @@ type TranslationStrings = {
   metaCommit: string;
   metaScanPath: string;
   metaDate: string;
+  severityLabels: Record<Severity, string>;
+  jobSummaryFooter: string;
 };
 
 const translations: Record<ReportLang, TranslationStrings> = {
@@ -97,6 +99,14 @@ const translations: Record<ReportLang, TranslationStrings> = {
     metaCommit: 'Commit:',
     metaScanPath: 'Scan path:',
     metaDate: 'Date:',
+    severityLabels: {
+      critical: 'CRITICAL',
+      high: 'HIGH',
+      medium: 'MEDIUM',
+      low: 'LOW',
+      info: 'INFO',
+    },
+    jobSummaryFooter: 'Job summary generated at run-time',
   },
   es: {
     title: 'AuditGuard Informe de Seguridad',
@@ -139,6 +149,14 @@ const translations: Record<ReportLang, TranslationStrings> = {
     metaCommit: 'Commit:',
     metaScanPath: 'Ruta escaneada:',
     metaDate: 'Fecha:',
+    severityLabels: {
+      critical: 'CRÍTICA',
+      high: 'ALTA',
+      medium: 'MEDIA',
+      low: 'BAJA',
+      info: 'INFO',
+    },
+    jobSummaryFooter: 'Resumen del trabajo generado en tiempo de ejecución',
   },
 };
 
@@ -194,7 +212,7 @@ function generateSummaryTable(findings: Finding[], tr: typeof translations.en): 
   md += '|----------|-------|\n';
   for (const sev of SEVERITY_ORDER) {
     if (summary.bySeverity[sev] > 0) {
-      md += `| ${SEVERITY_EMOJI[sev]} ${sev.toUpperCase()} | ${summary.bySeverity[sev]} |\n`;
+      md += `| ${SEVERITY_EMOJI[sev]} ${tr.severityLabels[sev]} | ${summary.bySeverity[sev]} |\n`;
     }
   }
   md += `| **${tr.totalLabel}** | **${summary.total}** |\n`;
@@ -205,7 +223,7 @@ function generateFindingBlock(finding: Finding, tr: typeof translations.en): str
   let md = `### ${finding.id} — ${escapeMarkdown(finding.message)}\n\n`;
   md += `| ${tr.fieldLabel} | ${tr.valueLabel} |\n`;
   md += '|-------|------|\n';
-  md += `| **${tr.severityLabel}** | ${SEVERITY_EMOJI[finding.severity]} ${finding.severity.toUpperCase()} |\n`;
+  md += `| **${tr.severityLabel}** | ${SEVERITY_EMOJI[finding.severity]} ${tr.severityLabels[finding.severity]} |\n`;
   md += `| **${tr.fileLabel}** | \`${finding.file}:${finding.line}\` |\n`;
   md += `| **${tr.ruleLabel}** | \`${finding.rule}\` |\n`;
   if (finding.cwe) {
@@ -229,7 +247,7 @@ function generateNpmAuditTable(findings: Finding[], tr: typeof translations.en):
   for (const f of npmFindings) {
     const pkg = f.rule.replace('npm-audit/', '');
     const cwe = f.cwe ? `[${f.cwe}](${f.cweUrl || '#'})` : 'N/A';
-    md += `| ${pkg} | ${f.severity.toUpperCase()} | ${cwe} | ${f.fixAvailable ? tr.yes : tr.no} | ${f.autoFixEligible ? tr.yes : tr.no} |\n`;
+    md += `| ${pkg} | ${tr.severityLabels[f.severity]} | ${cwe} | ${f.fixAvailable ? tr.yes : tr.no} | ${f.autoFixEligible ? tr.yes : tr.no} |\n`;
   }
 
   return md;
@@ -346,6 +364,7 @@ export function generateMarkdownReport(
 
   md += '\n---\n\n';
   md += `${tr.generatedBy('v0.1.0')}\n`;
+  md += `${tr.jobSummaryFooter}\n`;
 
   return md;
 }
