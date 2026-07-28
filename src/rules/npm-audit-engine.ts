@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process';
 import type { Finding, Severity } from '../types/finding.js';
+import { t, type ReportLang } from '../report/markdown-generator.js';
 
 interface NpmAuditVulnerability {
   name: string;
@@ -65,7 +66,8 @@ function execNpmAuditJson(
   });
 }
 
-export async function runNpmAuditEngine(scanPath: string): Promise<Finding[]> {
+export async function runNpmAuditEngine(scanPath: string, lang: ReportLang = 'en'): Promise<Finding[]> {
+  const tr = t(lang);
   const stdout = await execNpmAuditJson(scanPath);
   const output: NpmAuditOutput = JSON.parse(stdout);
   const findings: Finding[] = [];
@@ -96,11 +98,11 @@ export async function runNpmAuditEngine(scanPath: string): Promise<Finding[]> {
         file: 'package.json',
         line: 0,
         column: 0,
-        message: `${advisory.title} in ${pkgName} (${vuln.range})`,
-        explanation: `${advisory.title}. Vulnerability range: ${vuln.range}. ${advisory.url}`,
+        message: tr.npmVulnerabilityIn(advisory.title, pkgName, vuln.range),
+        explanation: tr.npmVulnerabilityRange(advisory.title, vuln.range, advisory.url),
         suggestion: fixAvailable
-          ? `Run 'npm audit fix' to update ${pkgName} to a patched version.`
-          : `No automatic fix available. Check ${advisory.url} for manual remediation steps.`,
+          ? tr.npmRunAuditFix(pkgName)
+          : tr.npmNoAutoFix(advisory.url),
         cwe: advisory.cwe?.[0] || '',
         cweUrl: advisory.cwe?.[0]
           ? `https://cwe.mitre.org/data/definitions/${advisory.cwe[0].replace('CWE-', '')}.html`
@@ -120,11 +122,11 @@ export async function runNpmAuditEngine(scanPath: string): Promise<Finding[]> {
         file: 'package.json',
         line: 0,
         column: 0,
-        message: `Vulnerability in transitive dependency ${pkgName} (${vuln.range})`,
-        explanation: `Transitive dependency ${pkgName} has a known vulnerability. Range: ${vuln.range}.`,
+        message: tr.npmTransitiveMessage(pkgName, vuln.range),
+        explanation: tr.npmTransitiveExplanation(pkgName, vuln.range),
         suggestion: typeof vuln.fixAvailable === 'object' && !vuln.fixAvailable.isSemVerMajor
-          ? `Run 'npm audit fix' to update.`
-          : `May require a breaking change. Review manually.`,
+          ? tr.npmTransitiveSuggestionFix
+          : tr.npmTransitiveSuggestionBreaking,
         cwe: '',
         fixAvailable: vuln.fixAvailable !== false,
         autoFixEligible:

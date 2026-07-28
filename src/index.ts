@@ -49,7 +49,7 @@ export async function runAudit(config: AuditGuardConfig): Promise<AuditResult> {
 
   core.info('Starting npm audit...');
   try {
-    const npmFindings = await runNpmAuditEngine(config.scanPath);
+    const npmFindings = await runNpmAuditEngine(config.scanPath, config.reportLang);
     core.info(`npm audit: ${npmFindings.length} findings`);
     allFindings.push(...npmFindings);
   } catch (error) {

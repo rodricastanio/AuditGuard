@@ -55,6 +55,14 @@ type TranslationStrings = {
   metaDate: string;
   severityLabels: Record<Severity, string>;
   jobSummaryFooter: string;
+  npmVulnerabilityIn: (title: string, pkg: string, range: string) => string;
+  npmVulnerabilityRange: (title: string, range: string, url: string) => string;
+  npmRunAuditFix: (pkg: string) => string;
+  npmNoAutoFix: (url: string) => string;
+  npmTransitiveMessage: (pkg: string, range: string) => string;
+  npmTransitiveExplanation: (pkg: string, range: string) => string;
+  npmTransitiveSuggestionFix: string;
+  npmTransitiveSuggestionBreaking: string;
 };
 
 const translations: Record<ReportLang, TranslationStrings> = {
@@ -107,6 +115,14 @@ const translations: Record<ReportLang, TranslationStrings> = {
       info: 'INFO',
     },
     jobSummaryFooter: 'Job summary generated at run-time',
+    npmVulnerabilityIn: (title, pkg, range) => `${title} in ${pkg} (${range})`,
+    npmVulnerabilityRange: (title, range, url) => `${title}. Vulnerability range: ${range}. ${url}`,
+    npmRunAuditFix: (pkg) => `Run 'npm audit fix' to update ${pkg} to a patched version.`,
+    npmNoAutoFix: (url) => `No automatic fix available. Check ${url} for manual remediation steps.`,
+    npmTransitiveMessage: (pkg, range) => `Vulnerability in transitive dependency ${pkg} (${range})`,
+    npmTransitiveExplanation: (pkg, range) => `Transitive dependency ${pkg} has a known vulnerability. Range: ${range}.`,
+    npmTransitiveSuggestionFix: "Run 'npm audit fix' to update.",
+    npmTransitiveSuggestionBreaking: 'May require a breaking change. Review manually.',
   },
   es: {
     title: 'AuditGuard Informe de Seguridad',
@@ -157,6 +173,14 @@ const translations: Record<ReportLang, TranslationStrings> = {
       info: 'INFO',
     },
     jobSummaryFooter: 'Resumen del trabajo generado en tiempo de ejecución',
+    npmVulnerabilityIn: (title, pkg, range) => `${title} en ${pkg} (${range})`,
+    npmVulnerabilityRange: (title, range, url) => `${title}. Rango de vulnerabilidad: ${range}. ${url}`,
+    npmRunAuditFix: (pkg) => `Ejecute 'npm audit fix' para actualizar ${pkg} a una versión parcheada.`,
+    npmNoAutoFix: (url) => `No hay corrección automática disponible. Consulte ${url} para pasos de remediación manual.`,
+    npmTransitiveMessage: (pkg, range) => `Vulnerabilidad en dependencia transitiva ${pkg} (${range})`,
+    npmTransitiveExplanation: (pkg, range) => `La dependencia transitiva ${pkg} tiene una vulnerabilidad conocida. Rango: ${range}.`,
+    npmTransitiveSuggestionFix: "Ejecute 'npm audit fix' para actualizar.",
+    npmTransitiveSuggestionBreaking: 'Puede requerir un cambio de última hora. Revise manualmente.',
   },
 };
 
